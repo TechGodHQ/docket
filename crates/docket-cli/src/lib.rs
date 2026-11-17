@@ -310,10 +310,8 @@ pub async fn run_cli() -> anyhow::Result<()> {
         .unwrap_or_default();
     let mut path_map = std::collections::BTreeMap::new();
     let mut query_map = string_params;
-    for key in ["id"] {
-        if let Some(v) = query_map.remove(key) {
-            path_map.insert(key.to_string(), v);
-        }
+    if let Some(v) = query_map.remove("id") {
+        path_map.insert("id".to_string(), v);
     }
     let _ = path_params;
     let input = generated::GeneratedOperationInput {
