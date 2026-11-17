@@ -1,0 +1,34 @@
+[package]
+name = "docket-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "docket CLI: hydra-projected operations over the decision ledger."
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "docket"
+path = "src/main.rs"
+
+[[bin]]
+name = "docket-http"
+path = "src/bin/docket-http.rs"
+
+[dependencies]
+docket-core = { workspace = true }
+# Hydra projection lives in crates/docket-codegen (pinned hydra-core +
+# hydra-codegen at tag v0.3.0); generated artifacts are committed under
+# generated/ and gated by `check` in CI.
+axum = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+serde_yaml = "0.9"

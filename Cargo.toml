@@ -1,0 +1,36 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/docket-core",
+    "crates/docket-cli",
+    "crates/docket-codegen",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/TechGodHQ/docket"
+
+[workspace.dependencies]
+docket-core = { path = "crates/docket-core" }
+# Hydra is the sole projection mechanism (CLI/HTTP/MCP). Pinned to the
+# immutable published v0.3.0 tag.
+hydra-core = { git = "https://github.com/TechGodHQ/hydra", tag = "v0.3.0" }
+hydra-codegen = { git = "https://github.com/TechGodHQ/hydra", tag = "v0.3.0" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+clap = { version = "4", features = ["derive", "env"] }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
