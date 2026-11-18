@@ -1,0 +1,124 @@
+# docket operations — single source of truth for CLI/HTTP/MCP projections.
+# Regenerate with: cd crates/docket-cli && cargo run -p docket-codegen --bin docket-codegen -- write
+# CI staleness gate: cargo run -p docket-codegen --bin docket-codegen -- check
+operations:
+  - name: docket_info
+    description: Report the docket service identity and its role invariant.
+    method: GET
+    path: /docket
+    read: true
+    output_type: DocketInfo
+
+  - name: list_items
+    description: Ledger items, optionally filtered by status and source.
+    method: GET
+    path: /items
+    read: true
+    output_type: Vec<Item>
+    parameters:
+      - name: status
+        description: Filter by lifecycle status (pending, dispatched, dismissed).
+        type: string
+        required: false
+        location: query
+      - name: source
+        description: Filter by producing source (e.g. plane, telegram, inbox).
+        type: string
+        required: false
+        location: query
+
+  - name: get_item
+    description: One ledger item by id, including its full decision log.
+    method: GET
+    path: /items/{id}
+    read: true
+    output_type: Item
+    parameters:
+      - name: id
+        description: Ledger item id (dkt-…).
+        type: string
+        required: true
+        location: path
+
+  - name: create_item
+    description: >
+      Append a new pending item. The producer boundary enforces design
+      law (b): items must carry injected context, a recommendation, and
+      a declarative action descriptor, or the create is rejected as a
+      producer bug.
+    method: POST
+    path: /items
+    read: false
+    output_type: Item
+    parameters:
+      - name: source
+        description: Producing source (e.g. plane, telegram, inbox).
+        type: string
+        required: true
+        location: query
+      - name: title
+        description: One-line summary.
+        type: string
+        required: true
+        location: query
+      - name: context
+        description: Injected context the decider needs (markdown).
+        type: string
+        required: true
+        location: query
+      - name: recommendation
+        description: The recommended action, stated plainly.
+        type: string
+        required: true
+        location: query
+      - name: action_target
+        description: Target worker for the action descriptor (e.g. hermes-coding, comms).
+        type: string
+        required: true
+        location: query
+      - name: action_operation
+        description: Operation the target worker knows (e.g. merge_pr, send_email).
+        type: string
+        required: true
+        location: query
+      - name: action_params
+        description: JSON object of pass-through parameters for the target worker.
+        type: string
+        required: false
+        location: query
+
+  - name: record_decision
+    description: >
+      Append a decision to the item's decision log and move its status.
+      Docket dispatches nothing here; the declarative action_descriptor
+      is handed to the target worker by the dispatch layer (docket-6).
+    method: POST
+    path: /items/{id}/decision
+    read: false
+    output_type: Item
+    parameters:
+      - name: id
+        description: Ledger item id (dkt-…).
+        type: string
+        required: true
+        location: path
+      - name: actor
+        description: Who decided (human or agent identity).
+        type: string
+        required: true
+        location: query
+      - name: decision
+        description: The decision (approve, dismiss, defer).
+        type: string
+        required: true
+        location: query
+      - name: note
+        description: Optional rationale.
+        type: string
+        required: false
+        location: query
+      - name: new_status
+        description: Resulting status (dispatched or dismissed; defaults to dispatched).
+        type: string
+        required: false
+        location: query

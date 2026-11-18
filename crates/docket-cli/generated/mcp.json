@@ -1,0 +1,157 @@
+{
+  "locations": {
+    "create_item": {
+      "action_operation": "query",
+      "action_params": "query",
+      "action_target": "query",
+      "context": "query",
+      "recommendation": "query",
+      "source": "query",
+      "title": "query"
+    },
+    "docket_info": {},
+    "get_item": {
+      "id": "path"
+    },
+    "list_items": {
+      "source": "query",
+      "status": "query"
+    },
+    "record_decision": {
+      "actor": "query",
+      "decision": "query",
+      "id": "path",
+      "new_status": "query",
+      "note": "query"
+    }
+  },
+  "tools": [
+    {
+      "description": "Report the docket service identity and its role invariant.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "docket_info"
+    },
+    {
+      "description": "Ledger items, optionally filtered by status and source.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "description": "Filter by producing source (e.g. plane, telegram, inbox).",
+            "type": "string"
+          },
+          "status": {
+            "description": "Filter by lifecycle status (pending, dispatched, dismissed).",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "list_items"
+    },
+    {
+      "description": "One ledger item by id, including its full decision log.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Ledger item id (dkt-…).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "name": "get_item"
+    },
+    {
+      "description": "Append a new pending item. The producer boundary enforces design law (b): items must carry injected context, a recommendation, and a declarative action descriptor, or the create is rejected as a producer bug.\n",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action_operation": {
+            "description": "Operation the target worker knows (e.g. merge_pr, send_email).",
+            "type": "string"
+          },
+          "action_params": {
+            "description": "JSON object of pass-through parameters for the target worker.",
+            "type": "string"
+          },
+          "action_target": {
+            "description": "Target worker for the action descriptor (e.g. hermes-coding, comms).",
+            "type": "string"
+          },
+          "context": {
+            "description": "Injected context the decider needs (markdown).",
+            "type": "string"
+          },
+          "recommendation": {
+            "description": "The recommended action, stated plainly.",
+            "type": "string"
+          },
+          "source": {
+            "description": "Producing source (e.g. plane, telegram, inbox).",
+            "type": "string"
+          },
+          "title": {
+            "description": "One-line summary.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "title",
+          "context",
+          "recommendation",
+          "action_target",
+          "action_operation"
+        ],
+        "type": "object"
+      },
+      "name": "create_item"
+    },
+    {
+      "description": "Append a decision to the item's decision log and move its status. Docket dispatches nothing here; the declarative action_descriptor is handed to the target worker by the dispatch layer (docket-6).\n",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "actor": {
+            "description": "Who decided (human or agent identity).",
+            "type": "string"
+          },
+          "decision": {
+            "description": "The decision (approve, dismiss, defer).",
+            "type": "string"
+          },
+          "id": {
+            "description": "Ledger item id (dkt-…).",
+            "type": "string"
+          },
+          "new_status": {
+            "description": "Resulting status (dispatched or dismissed; defaults to dispatched).",
+            "type": "string"
+          },
+          "note": {
+            "description": "Optional rationale.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "decision"
+        ],
+        "type": "object"
+      },
+      "name": "record_decision"
+    }
+  ]
+}

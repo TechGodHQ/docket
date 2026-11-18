@@ -1,0 +1,19 @@
+[package]
+name = "docket-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Decision-ledger domain model: items, declarative action descriptors, append-only decision log. No LLM, no execution."
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_yaml = "0.9"
