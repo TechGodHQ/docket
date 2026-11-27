@@ -6,6 +6,8 @@
 //! in CI. Every generated surface funnels into one dispatch:
 //! [`execute_operation`].
 
+use std::ffi::OsString;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::http::StatusCode;
@@ -14,6 +16,7 @@ use clap::Parser;
 use docket_core::{
     ActionDescriptor, DecisionLogEntry, DocketConfig, DocketInfo, ItemStatus, ItemStore, StoreError,
 };
+use docket_store_sqlite::SqliteStore;
 use serde_json::Value;
 
 pub mod generated {
@@ -255,13 +258,30 @@ pub fn http_router(state: AppState) -> axum::Router {
     generated::generated_router().with_state(state)
 }
 
+fn apply_data_dir_override(config: &mut DocketConfig, override_dir: Option<OsString>) {
+    if let Some(data_dir) = override_dir {
+        config.data_dir = PathBuf::from(data_dir);
+    }
+}
+
+fn runtime_config() -> DocketConfig {
+    let mut config = DocketConfig::default();
+    apply_data_dir_override(&mut config, std::env::var_os("DOCKET_DATA_DIR"));
+    config
+}
+
+fn open_store(config: &DocketConfig) -> anyhow::Result<Arc<dyn ItemStore>> {
+    let store: Arc<dyn ItemStore> = Arc::new(SqliteStore::open(&config.data_dir)?);
+    Ok(store)
+}
+
 /// HTTP entry: serve the clean API surface (design law (c)) on localhost.
 ///
 /// # Errors
 /// Propagates listener/serve failures.
 pub async fn run_http() -> anyhow::Result<()> {
-    let config = DocketConfig::default();
-    let state = AppState::new(Arc::new(docket_core::InMemoryStore::new()));
+    let config = runtime_config();
+    let state = AppState::new(open_store(&config)?);
     let app = http_router(state);
     let addr = format!("127.0.0.1:{}", config.http_port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
@@ -286,7 +306,8 @@ pub async fn run_cli() -> anyhow::Result<()> {
     }
 
     let cli = Cli::parse();
-    let state = AppState::new(Arc::new(docket_core::InMemoryStore::new()));
+    let config = runtime_config();
+    let state = AppState::new(open_store(&config)?);
 
     let operation = cli.command.operation_name();
     let params = cli.command.parameters_json();
@@ -331,6 +352,27 @@ pub async fn run_cli() -> anyhow::Result<()> {
 mod tests {
     use super::*;
     use docket_core::InMemoryStore;
+
+    #[test]
+    fn data_dir_environment_override_takes_precedence() {
+        let mut config = DocketConfig::default();
+        apply_data_dir_override(
+            &mut config,
+            Some(OsString::from("/opt/data/tmp/docket-config-override")),
+        );
+        assert_eq!(
+            config.data_dir,
+            PathBuf::from("/opt/data/tmp/docket-config-override")
+        );
+        assert_eq!(config.http_port, 8951);
+    }
+
+    #[test]
+    fn missing_data_dir_override_preserves_default() {
+        let mut config = DocketConfig::default();
+        apply_data_dir_override(&mut config, None);
+        assert_eq!(config.data_dir, PathBuf::from("/data"));
+    }
 
     fn state() -> AppState {
         AppState::new(Arc::new(InMemoryStore::new()))

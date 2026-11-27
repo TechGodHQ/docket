@@ -1,0 +1,19 @@
+[package]
+name = "docket-store-sqlite"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "SQLite persistence adapter for Docket's ItemStore ledger."
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+docket-core = { workspace = true }
+rusqlite = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
