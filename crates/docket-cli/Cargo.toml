@@ -20,6 +20,7 @@ path = "src/bin/docket-http.rs"
 
 [dependencies]
 docket-core = { workspace = true }
+docket-store-sqlite = { workspace = true }
 # Hydra projection lives in crates/docket-codegen (pinned hydra-core +
 # hydra-codegen at tag v0.3.0); generated artifacts are committed under
 # generated/ and gated by `check` in CI.
@@ -32,3 +33,4 @@ anyhow = { workspace = true }
 
 [dev-dependencies]
 serde_yaml = "0.9"
+tempfile = { workspace = true }
